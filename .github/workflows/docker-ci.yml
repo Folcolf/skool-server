@@ -27,7 +27,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-report
-          path: target/site/jacoco/
+          path: target/jacoco-report
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Log in to DockerHub
@@ -41,6 +41,7 @@ jobs:
           context: .
           file: src/main/docker/Dockerfile.jvm
           push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/skool-server:$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
 
   release:
     if: github.ref_type == 'branch' && startsWith(github.ref_name, 'release/')
