@@ -118,7 +118,6 @@
                             <goal>generate-code</goal>
                             <goal>generate-code-tests</goal>
                             <goal>native-image-agent</goal>
-                            <goal>test</goal>
                         </goals>
                     </execution>
                 </executions>

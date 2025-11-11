@@ -7,16 +7,12 @@ on:
       - develop
       - 'fix/**'
       - 'feature/**'
-  pull_request:
-    branches:
-      - master
-      - develop
-      - 'fix/**'
-      - 'feature/**'
 
 jobs:
   build:
+    if: github.ref_name != 'master' && github.ref_name != 'develop'
     runs-on: ubuntu-latest
+    environment: Skool
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -49,6 +45,7 @@ jobs:
   release:
     if: github.ref_type == 'branch' && startsWith(github.ref_name, 'release/')
     runs-on: ubuntu-latest
+    environment: Skool
     needs: build
     permissions:
       contents: write
