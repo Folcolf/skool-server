@@ -3,14 +3,15 @@ name: Build, Test, Dockerize & Push
 on:
   push:
     branches:
-      - master
-      - develop
       - 'fix/**'
       - 'feature/**'
+      - 'release/**'
+      - '!master'
+      - '!develop'
+  workflow_dispatch:
 
 jobs:
   build:
-    if: github.ref_name != 'master' && github.ref_name != 'develop'
     runs-on: ubuntu-latest
     environment: Skool
     steps:
@@ -23,6 +24,17 @@ jobs:
           java-version: '21'
       - name: Build with Maven and run tests
         run: ./mvnw --batch-mode clean verify
+      - name: Analyse SonarCloud (avec coverage)
+        run: ./mvnw sonar:sonar -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco-report/jacoco.xml
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: "https://sonarcloud.io"
+  docker:
+    if: github.event_name == 'workflow_dispatch'
+    needs: build
+    runs-on: ubuntu-latest
+    environment: Skool
+    steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Log in to DockerHub
@@ -42,7 +54,7 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/skool-server:${{ env.VERSION }}
 
   release:
-    if: github.ref_type == 'branch' && startsWith(github.ref_name, 'release/')
+    if: startsWith(github.ref_name, 'release/')
     runs-on: ubuntu-latest
     environment: Skool
     needs: build
