@@ -23,11 +23,6 @@ jobs:
           java-version: '21'
       - name: Build with Maven and run tests
         run: ./mvnw --batch-mode clean verify
-      - name: Upload Jacoco coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: jacoco-report
-          path: target/jacoco-report
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Log in to DockerHub
