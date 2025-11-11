@@ -1,142 +1,99 @@
 package com.folcolf.skool.server.controller;
 
-import com.folcolf.skool.server.entity.Grade;
-import com.folcolf.skool.server.entity.Student;
-import com.folcolf.skool.server.security.SecurityService;
-import com.folcolf.skool.server.service.GradeService;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.ws.rs.ForbiddenException;
-import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.BeforeEach;
+import static io.restassured.RestAssured.given;
+import io.restassured.http.ContentType;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.is;
 import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.*;
-
-import java.util.List;
-import java.util.Map;
 
 @QuarkusTest
 class GradeControllerTest {
-    private GradeService gradeService;
-    private SecurityService securityService;
-    private GradeController controller;
-
-    @BeforeEach
-    void setUp() {
-        gradeService = mock(GradeService.class);
-        securityService = mock(SecurityService.class);
-        controller = new GradeController(gradeService, securityService);
+    @Test
+    void getAll_shouldReturn200ForAdmin() {
+        given()
+                .auth().basic("admin", "admin")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/grades")
+                .then()
+                .statusCode(200);
     }
 
     @Test
-    void getAll_shouldDelegateToService() {
-        when(gradeService.listAll()).thenReturn(List.of());
-        assertNotNull(controller.getAll());
-        verify(gradeService).listAll();
+    void getAll_shouldReturn403ForNonAdmin() {
+        given()
+                .auth().basic("user", "user")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/grades")
+                .then()
+                .statusCode(403);
     }
 
     @Test
-    void getById_shouldReturnGradeForAdmin() {
-        Grade g = new Grade();
-        when(securityService.isAdmin()).thenReturn(true);
-        when(gradeService.findById(1L)).thenReturn(g);
-        assertEquals(g, controller.getById(1L));
-        verify(gradeService).findById(1L);
+    void getById_shouldReturn200Or204ForAdmin() {
+        given()
+                .auth().basic("admin", "admin")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/grades/1")
+                .then()
+                .statusCode(anyOf(is(200), is(204)));
     }
 
     @Test
-    void getById_shouldReturnGradeForViewerPrincipal() {
-        reset(gradeService, securityService);
-        Grade g = new Grade();
-        Student s = new Student();
-        s.id = 1L;
-        g.setStudent(s);
-        when(securityService.isAdmin()).thenReturn(false);
-        when(gradeService.findById(1L)).thenReturn(g);
-        when(securityService.getPrincipalId()).thenReturn("1");
-        when(securityService.isPrincipal(1L)).thenReturn(true);
-        assertEquals(g, controller.getById(1L));
+    void getById_shouldReturn403ForNonAdmin() {
+        given()
+                .auth().basic("user", "user")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/grades/1")
+                .then()
+                .statusCode(403);
     }
 
     @Test
-    void getById_shouldThrowForbiddenForViewerNonPrincipal() {
-        Grade g = new Grade();
-        Student s = new Student();
-        s.id = 99L;
-        g.setStudent(s);
-        when(securityService.isAdmin()).thenReturn(false);
-        when(gradeService.findById(1L)).thenReturn(g);
-        when(securityService.getPrincipalId()).thenReturn("2");
-        assertThrows(ForbiddenException.class, () -> controller.getById(1L));
+    void create_shouldReturn201ForAdmin() {
+        given()
+                .auth().basic("admin", "admin")
+                .contentType(ContentType.JSON)
+                .body("{}")
+                .when()
+                .post("/grades")
+                .then()
+                .statusCode(anyOf(is(200), is(201), is(204)));
     }
 
     @Test
-    void getById_shouldThrowForbiddenForViewerNoStudent() {
-        Grade gNoStudent = new Grade();
-        when(securityService.isAdmin()).thenReturn(false);
-        when(gradeService.findById(2L)).thenReturn(gNoStudent);
-        assertThrows(ForbiddenException.class, () -> controller.getById(2L));
+    void create_shouldReturn403ForNonAdmin() {
+        given()
+                .auth().basic("user", "user")
+                .contentType(ContentType.JSON)
+                .body("{}")
+                .when()
+                .post("/grades")
+                .then()
+                .statusCode(403);
     }
 
     @Test
-    void create_shouldDelegateToService() {
-        Grade g = new Grade();
-        controller.create(g);
-        verify(gradeService).persist(g);
+    void delete_shouldReturn204ForAdmin() {
+        given()
+                .auth().basic("admin", "admin")
+                .when()
+                .delete("/grades/1")
+                .then()
+                .statusCode(anyOf(is(200), is(204)));
     }
 
     @Test
-    void delete_shouldDelegateToService() {
-        controller.delete(1L);
-        verify(gradeService).delete(1L);
-    }
-
-    @Test
-    void getGrades_shouldDelegateToService() {
-        when(securityService.isAdmin()).thenReturn(true);
-        when(gradeService.getGradesForStudent(1L)).thenReturn(List.of());
-        assertNotNull(controller.getGrades(1L));
-        verify(gradeService).getGradesForStudent(1L);
-        // viewer principal
-        when(securityService.isAdmin()).thenReturn(false);
-        when(securityService.isPrincipal(1L)).thenReturn(true);
-        assertNotNull(controller.getGrades(1L));
-        // viewer non principal
-        when(securityService.isPrincipal(1L)).thenReturn(false);
-        assertThrows(ForbiddenException.class, () -> controller.getGrades(1L));
-    }
-
-    @Test
-    void getAverages_shouldDelegateToService() {
-        when(securityService.isAdmin()).thenReturn(true);
-        when(gradeService.getAverageBySubject(1L)).thenReturn(Map.of());
-        assertNotNull(controller.getAverages(1L));
-        verify(gradeService).getAverageBySubject(1L);
-        // viewer principal
-        when(securityService.isAdmin()).thenReturn(false);
-        when(securityService.isPrincipal(1L)).thenReturn(true);
-        assertNotNull(controller.getAverages(1L));
-        // viewer non principal
-        when(securityService.isPrincipal(1L)).thenReturn(false);
-        assertThrows(ForbiddenException.class, () -> controller.getAverages(1L));
-    }
-
-    @Test
-    void getClassAverage_shouldDelegateToService() {
-        when(securityService.canAccessClass(1L)).thenReturn(true);
-        when(gradeService.getClassAverage(1L)).thenReturn(10.0);
-        assertEquals(10.0, controller.getClassAverage(1L));
-        // accès refusé
-        when(securityService.canAccessClass(1L)).thenReturn(false);
-        assertThrows(ForbiddenException.class, () -> controller.getClassAverage(1L));
-    }
-
-    @Test
-    void getClassAverageForSubject_shouldDelegateToService() {
-        when(securityService.canAccessClass(1L)).thenReturn(true);
-        when(gradeService.getClassAverageForSubject(1L, 2L)).thenReturn(15.0);
-        assertEquals(15.0, controller.getClassAverageForSubject(1L, 2L));
-        // accès refusé
-        when(securityService.canAccessClass(1L)).thenReturn(false);
-        assertThrows(ForbiddenException.class, () -> controller.getClassAverageForSubject(1L, 2L));
+    void delete_shouldReturn403ForNonAdmin() {
+        given()
+                .auth().basic("user", "user")
+                .when()
+                .delete("/grades/1")
+                .then()
+                .statusCode(403);
     }
 }

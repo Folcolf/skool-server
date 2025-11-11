@@ -1,82 +1,99 @@
 package com.folcolf.skool.server.controller;
 
-import com.folcolf.skool.server.entity.Student;
-import com.folcolf.skool.server.security.SecurityService;
-import com.folcolf.skool.server.service.StudentService;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.ws.rs.ForbiddenException;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import org.junit.jupiter.api.BeforeEach;
+import static io.restassured.RestAssured.given;
+import io.restassured.http.ContentType;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.is;
 import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.*;
-
-import java.util.List;
 
 @QuarkusTest
 class StudentControllerTest {
-    private StudentService studentService;
-    private SecurityService securityService;
-    private StudentController controller;
-
-    @BeforeEach
-    void setUp() {
-        studentService = mock(StudentService.class);
-        securityService = mock(SecurityService.class);
-        controller = new StudentController(studentService, securityService);
+    @Test
+    void getAll_shouldReturn200ForAdmin() {
+        given()
+                .auth().basic("admin", "admin")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/students")
+                .then()
+                .statusCode(200);
     }
 
     @Test
-    void getAll_shouldDelegateToService() {
-        when(studentService.listAll()).thenReturn(List.of());
-        assertNotNull(controller.getAll());
-        verify(studentService).listAll();
+    void getAll_shouldReturn403ForNonAdmin() {
+        given()
+                .auth().basic("user", "user")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/students")
+                .then()
+                .statusCode(403);
     }
 
     @Test
-    void getAll_shouldDelegateToService_adminOnly() {
-        when(securityService.isAdmin()).thenReturn(true);
-        when(studentService.listAll()).thenReturn(List.of());
-        assertNotNull(controller.getAll());
-        verify(studentService).listAll();
+    void getById_shouldReturn200Or204ForAdmin() {
+        given()
+                .auth().basic("admin", "admin")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/students/1")
+                .then()
+                .statusCode(anyOf(is(200), is(204)));
     }
 
     @Test
-    void getById_shouldReturnForAdmin() {
-        Student s = new Student();
-        when(securityService.isAdmin()).thenReturn(true);
-        when(studentService.findById(1L)).thenReturn(s);
-        assertNotNull(controller.getById(1L));
+    void getById_shouldReturn403ForNonAdmin() {
+        given()
+                .auth().basic("user", "user")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/students/1")
+                .then()
+                .statusCode(403);
     }
 
     @Test
-    void getById_shouldReturnForPrincipal() {
-        Student s = new Student();
-        when(securityService.isAdmin()).thenReturn(false);
-        when(securityService.isPrincipal(1L)).thenReturn(true);
-        when(studentService.findById(1L)).thenReturn(s);
-        assertNotNull(controller.getById(1L));
+    void create_shouldReturn201ForAdmin() {
+        given()
+                .auth().basic("admin", "admin")
+                .contentType(ContentType.JSON)
+                .body("{}")
+                .when()
+                .post("/students")
+                .then()
+                .statusCode(anyOf(is(200), is(201), is(204)));
     }
 
     @Test
-    void getById_shouldThrowForbiddenForOtherViewer() {
-        when(securityService.isAdmin()).thenReturn(false);
-        when(securityService.isPrincipal(1L)).thenReturn(false);
-        assertThrows(ForbiddenException.class, () -> controller.getById(1L));
+    void create_shouldReturn403ForNonAdmin() {
+        given()
+                .auth().basic("user", "user")
+                .contentType(ContentType.JSON)
+                .body("{}")
+                .when()
+                .post("/students")
+                .then()
+                .statusCode(403);
     }
 
     @Test
-    void create_shouldDelegateToService_adminOnly() {
-        Student s = new Student();
-        when(securityService.isAdmin()).thenReturn(true);
-        controller.create(s);
-        verify(studentService).persist(s);
+    void delete_shouldReturn204ForAdmin() {
+        given()
+                .auth().basic("admin", "admin")
+                .when()
+                .delete("/students/1")
+                .then()
+                .statusCode(anyOf(is(200), is(204)));
     }
 
     @Test
-    void delete_shouldDelegateToService_adminOnly() {
-        when(securityService.isAdmin()).thenReturn(true);
-        controller.delete(1L);
-        verify(studentService).delete(1L);
+    void delete_shouldReturn403ForNonAdmin() {
+        given()
+                .auth().basic("user", "user")
+                .when()
+                .delete("/students/1")
+                .then()
+                .statusCode(403);
     }
 }

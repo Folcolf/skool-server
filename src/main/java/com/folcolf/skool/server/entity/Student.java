@@ -32,12 +32,11 @@ public class Student extends PanacheEntity {
         }
         return Objects.equals(id, student.id) &&
                 Objects.equals(getFirstName(), student.getFirstName()) &&
-                Objects.equals(getLastName(), student.getLastName()) &&
-                Objects.equals(getSchoolClass(), student.getSchoolClass());
+                Objects.equals(getLastName(), student.getLastName());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, getFirstName(), getLastName(), getSchoolClass());
+        return Objects.hash(id, getFirstName(), getLastName());
     }
 }

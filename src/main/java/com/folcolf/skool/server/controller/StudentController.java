@@ -1,7 +1,7 @@
 package com.folcolf.skool.server.controller;
 
 import com.folcolf.skool.server.entity.Student;
-import com.folcolf.skool.server.security.SecurityService;
+import com.folcolf.skool.server.security.PrincipalOrAdmin;
 import com.folcolf.skool.server.service.StudentService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.*;
@@ -16,7 +16,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class StudentController {
     private final StudentService studentService;
-    private final SecurityService securityService;
 
     @GET
     @RolesAllowed("admin")
@@ -27,11 +26,9 @@ public class StudentController {
     @GET
     @Path("/{id}")
     @RolesAllowed({"admin", "viewer"})
+    @PrincipalOrAdmin()
     public Student getById(@PathParam("id") Long id) {
-        if (securityService.isAdmin() || securityService.isPrincipal(id)) {
-            return studentService.findById(id);
-        }
-        throw new ForbiddenException("Not allowed to access this student");
+        return studentService.findById(id);
     }
 
     @POST

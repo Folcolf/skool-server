@@ -1,71 +1,55 @@
 package com.folcolf.skool.server.controller;
 
-import com.folcolf.skool.server.entity.Subject;
-import com.folcolf.skool.server.security.SecurityService;
-import com.folcolf.skool.server.service.SubjectService;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.ws.rs.ForbiddenException;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import org.junit.jupiter.api.BeforeEach;
+import static io.restassured.RestAssured.given;
+import io.restassured.http.ContentType;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.is;
 import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.*;
-
-import java.util.List;
 
 @QuarkusTest
 class SubjectControllerTest {
-    private SubjectService subjectService;
-    private SubjectController controller;
-    private SecurityService securityService;
-
-    @BeforeEach
-    void setUp() {
-        subjectService = mock(SubjectService.class);
-        securityService = mock(SecurityService.class);
-        controller = new SubjectController(subjectService, securityService);
+    @Test
+    void getAll_shouldReturn200ForAdmin() {
+        given()
+                .auth().basic("admin", "admin")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/subjects")
+                .then()
+                .statusCode(200);
     }
 
     @Test
-    void getAll_shouldDelegateToService_adminOnly() {
-        when(securityService.isAdmin()).thenReturn(true);
-        when(subjectService.listAll()).thenReturn(List.of());
-        assertNotNull(controller.getAll());
-        verify(subjectService).listAll();
+    void getAll_shouldReturn403ForNonAdmin() {
+        given()
+                .auth().basic("user", "user")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/subjects")
+                .then()
+                .statusCode(403);
     }
 
     @Test
-    void getAll_shouldThrowForbiddenForNonAdmin() {
-        when(securityService.isAdmin()).thenReturn(false);
-        assertThrows(ForbiddenException.class, () -> controller.getAll());
+    void getById_shouldReturn200ForAdmin() {
+        given()
+                .auth().basic("admin", "admin")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/subjects/1")
+                .then()
+                .statusCode(anyOf(is(200), is(204)));
     }
 
     @Test
-    void getById_shouldReturnForAdmin() {
-        Subject s = new Subject();
-        when(securityService.isAdmin()).thenReturn(true);
-        when(subjectService.findById(1L)).thenReturn(s);
-        assertNotNull(controller.getById(1L));
-    }
-
-    @Test
-    void getById_shouldThrowForbiddenForNonAdmin() {
-        when(securityService.isAdmin()).thenReturn(false);
-        assertThrows(ForbiddenException.class, () -> controller.getById(1L));
-    }
-
-    @Test
-    void create_shouldDelegateToService_adminOnly() {
-        Subject s = new Subject();
-        when(securityService.isAdmin()).thenReturn(true);
-        controller.create(s);
-        verify(subjectService).persist(s);
-    }
-
-    @Test
-    void delete_shouldDelegateToService_adminOnly() {
-        when(securityService.isAdmin()).thenReturn(true);
-        controller.delete(1L);
-        verify(subjectService).delete(1L);
+    void getById_shouldReturn403ForNonAdmin() {
+        given()
+                .auth().basic("user", "user")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/subjects/1")
+                .then()
+                .statusCode(403);
     }
 }

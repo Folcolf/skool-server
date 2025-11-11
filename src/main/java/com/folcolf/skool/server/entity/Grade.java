@@ -1,6 +1,7 @@
 package com.folcolf.skool.server.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
 import lombok.*;
@@ -15,6 +16,7 @@ import java.util.Objects;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Grade extends PanacheEntity {
+    @Column(name = "grade_value")
     private Double value;
     @ManyToOne
     @ToString.Exclude
@@ -40,11 +42,11 @@ public class Grade extends PanacheEntity {
         if (!(o instanceof Grade grade)) {
             return false;
         }
-        return Objects.equals(id, grade.id) && Objects.equals(getValue(), grade.getValue()) && Objects.equals(getStudent(), grade.getStudent()) && Objects.equals(getSubject(), grade.getSubject());
+        return Objects.equals(id, grade.id) && Objects.equals(getValue(), grade.getValue());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, getValue(), getStudent(), getSubject());
+        return Objects.hash(id, getValue());
     }
 }

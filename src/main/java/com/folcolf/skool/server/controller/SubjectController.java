@@ -1,7 +1,6 @@
 package com.folcolf.skool.server.controller;
 
 import com.folcolf.skool.server.entity.Subject;
-import com.folcolf.skool.server.security.SecurityService;
 import com.folcolf.skool.server.service.SubjectService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.*;
@@ -16,14 +15,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SubjectController {
     private final SubjectService subjectService;
-    private final SecurityService securityService;
 
     @GET
     @RolesAllowed("admin")
     public List<Subject> getAll() {
-        if (!securityService.isAdmin()) {
-            throw new ForbiddenException("Not allowed to access subjects");
-        }
         return subjectService.listAll();
     }
 
@@ -31,10 +26,7 @@ public class SubjectController {
     @Path("/{id}")
     @RolesAllowed("admin")
     public Subject getById(@PathParam("id") Long id) {
-        if (securityService.isAdmin()) {
-            return subjectService.findById(id);
-        }
-        throw new ForbiddenException("Not allowed to access this subject");
+        return subjectService.findById(id);
     }
 
     @POST

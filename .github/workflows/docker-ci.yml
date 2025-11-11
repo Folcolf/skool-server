@@ -35,13 +35,16 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Extraire la version Maven
+        id: maven_version
+        run: echo "VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: src/main/docker/Dockerfile.jvm
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/skool-server:$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/skool-server:${{ env.VERSION }}
 
   release:
     if: github.ref_type == 'branch' && startsWith(github.ref_name, 'release/')
@@ -105,4 +108,4 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git commit -am "chore: prepare next development iteration ${{ steps.bump.outputs.next_version }}"
-          git push origin HEAD:release/${{ github.ref_name }}
+          git push origin HEAD:${{ github.ref_name }}

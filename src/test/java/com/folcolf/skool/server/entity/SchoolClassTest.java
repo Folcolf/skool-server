@@ -4,6 +4,9 @@ import io.quarkus.test.junit.QuarkusTest;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @QuarkusTest
 class SchoolClassTest {
     @Test
@@ -33,5 +36,23 @@ class SchoolClassTest {
         c.id = 1L;
         String notAClass = "not a class";
         assertNotEquals(notAClass, c);
+    }
+
+    @Test
+    void testGettersAndSetters() {
+        SchoolClass c = new SchoolClass();
+        c.setName("B");
+        Teacher t = new Teacher();
+        c.setTeacher(t);
+        assertEquals("B", c.getName());
+        assertEquals(t, c.getTeacher());
+    }
+
+    @Test
+    void testGettersAndSettersStudents() {
+        SchoolClass c = new SchoolClass();
+        List<Student> students = new ArrayList<>();
+        c.setStudents(students);
+        assertEquals(students, c.getStudents());
     }
 }
