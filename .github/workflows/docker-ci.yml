@@ -1,17 +1,37 @@
 name: Build, Test, Dockerize & Push
 
+permissions:
+  pull-requests: read
+  contents: read
+
 on:
   push:
     branches:
-      - 'fix/**'
-      - 'feature/**'
-      - 'release/**'
-      - '!master'
-      - '!develop'
-  workflow_dispatch:
+      - master
+  pull_request:
 
 jobs:
-  build:
+  init:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+      branch: ${{ steps.get_branch.outputs.branch }}
+      project: ${{ steps.get_project.outputs.project }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Get Maven version
+        id: get_version
+        run: echo "version=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_OUTPUT
+      - name: Get branch name
+        id: get_branch
+        run: echo "branch=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
+      - name: Get project name
+        id: get_project
+        run: echo "project=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_OUTPUT
+
+  test:
+    needs: init
     runs-on: ubuntu-latest
     environment: Skool
     steps:
@@ -20,18 +40,29 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '21'
-      - name: Build with Maven and run tests
-        run: ./mvnw --batch-mode clean verify
-      - name: Analyse SonarCloud (avec coverage)
-        run: ./mvnw sonar:sonar -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco-report/jacoco.xml
+          distribution: "temurin"
+          java-version: "21"
+      - name: Build with Maven, run tests and generate JaCoCo XML report
+        run: ./mvnw --batch-mode clean test jacoco:report
+      - name: Upload JaCoCo coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/jacoco.xml
+      - name: SonarCloud Scanner
+        uses: SonarSource/sonarqube-scan-action@v6.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: "https://sonarcloud.io"
+        with:
+          args: >
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+            "-Dsonar.projectName=${{ needs.init.outputs.project  }}"
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+
   docker:
     if: github.event_name == 'workflow_dispatch'
-    needs: build
+    needs: [ init, test ]
     runs-on: ubuntu-latest
     environment: Skool
     steps:
@@ -42,22 +73,19 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Extraire la version Maven
-        id: maven_version
-        run: echo "VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: src/main/docker/Dockerfile.jvm
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/skool-server:${{ env.VERSION }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ needs.init.outputs.project }}:${{ needs.init.outputs.version }}
 
   release:
-    if: startsWith(github.ref_name, 'release/')
+    if: startsWith(needs.init.outputs.branch, 'release/') && github.event_name == 'workflow_dispatch'
+    needs: [ init, test ]
     runs-on: ubuntu-latest
     environment: Skool
-    needs: build
     permissions:
       contents: write
       packages: write
@@ -69,8 +97,8 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '21'
+          distribution: "temurin"
+          java-version: "21"
       - name: Demander validation manuelle pour release
         uses: trstringer/manual-approval@v1
         with:
@@ -99,7 +127,7 @@ jobs:
           context: .
           file: src/main/docker/Dockerfile.jvm
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/skool-server:${{ steps.version.outputs.version }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ needs.init.outputs.project }}:${{ steps.version.outputs.version }}
       - name: Incrémenter version mineure et remettre -SNAPSHOT
         id: bump
         run: |
@@ -115,4 +143,4 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git commit -am "chore: prepare next development iteration ${{ steps.bump.outputs.next_version }}"
-          git push origin HEAD:${{ github.ref_name }}
+          git push origin HEAD:${{ needs.init.outputs.branch }}
