@@ -43,18 +43,11 @@ public class SecurityService {
         SchoolClass schoolClass = schoolClassService.findById(classId);
         if (schoolClass == null || schoolClass.getStudents() == null)
             return false;
-        return schoolClass.getStudents().stream()
-                .anyMatch(s -> Objects.equals(String.valueOf(s.id), getPrincipalId()));
-    }
-
-    public boolean isTeacherOfClass(Long classId) {
-        SchoolClass schoolClass = schoolClassService.findById(classId);
-        if (schoolClass == null || schoolClass.getTeacher() == null)
-            return false;
-        return Objects.equals(String.valueOf(schoolClass.getTeacher().id), getPrincipalId());
+        return schoolClass.getStudents().stream().anyMatch(s -> Objects.equals(String.valueOf(s.id), getPrincipalId()));
     }
 
     public boolean canAccessClass(Long classId) {
-        return isAdmin() || isStudentInClass(classId) || isTeacherOfClass(classId);
+        return isAdmin() || isStudentInClass(classId);
     }
+
 }

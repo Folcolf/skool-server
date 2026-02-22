@@ -14,6 +14,10 @@ public class StudentService {
         return Student.listAll();
     }
 
+    public List<Student> findByClassId(Long classId) {
+        return Student.findByClassId(classId);
+    }
+
     public Student findById(Long id) {
         return Student.findById(id);
     }
@@ -21,6 +25,11 @@ public class StudentService {
     @Transactional
     public void persist(Student student) {
         student.persist();
+    }
+
+    @Transactional
+    public void addStudentsToClass(Long classId, List<Long> studentIds) {
+        Student.addStudentsToClass(classId, studentIds);
     }
 
     @Transactional

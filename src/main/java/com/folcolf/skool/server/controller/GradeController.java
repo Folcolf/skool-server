@@ -1,8 +1,9 @@
 package com.folcolf.skool.server.controller;
 
+import com.folcolf.skool.server.dto.GradeClassDto;
 import com.folcolf.skool.server.entity.Grade;
 import com.folcolf.skool.server.security.CanAccessClass;
-import com.folcolf.skool.server.security.PrincipalOrAdmin;
+import com.folcolf.skool.server.security.OwnerOrAdmin;
 import com.folcolf.skool.server.service.GradeService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.*;
@@ -28,7 +29,7 @@ public class GradeController {
     @GET
     @Path("/{id}")
     @RolesAllowed({"admin", "viewer"})
-    @PrincipalOrAdmin()
+    @OwnerOrAdmin
     public Grade getById(@PathParam("id") Long id) {
         return gradeService.findById(id);
     }
@@ -37,6 +38,13 @@ public class GradeController {
     @RolesAllowed("admin")
     public void create(Grade grade) {
         gradeService.persist(grade);
+    }
+
+    @POST
+    @Path("/batch")
+    @RolesAllowed("admin")
+    public void createBatch(List<Grade> grades) {
+        gradeService.persistBatch(grades);
     }
 
     @DELETE
@@ -49,7 +57,7 @@ public class GradeController {
     @GET
     @Path("/student/{id}")
     @RolesAllowed({"admin", "viewer"})
-    @PrincipalOrAdmin()
+    @OwnerOrAdmin
     public List<Grade> getGrades(@PathParam("id") Long id) {
         return gradeService.getGradesForStudent(id);
     }
@@ -57,7 +65,7 @@ public class GradeController {
     @GET
     @Path("/student/{id}/averages")
     @RolesAllowed({"admin", "viewer"})
-    @PrincipalOrAdmin()
+    @OwnerOrAdmin
     public Map<String, Double> getAverages(@PathParam("id") Long id) {
         return gradeService.getAverageBySubject(id);
     }
@@ -66,15 +74,8 @@ public class GradeController {
     @Path("/class/{classId}/average")
     @RolesAllowed({"admin", "viewer"})
     @CanAccessClass()
-    public Double getClassAverage(@PathParam("classId") Long classId) {
-        return gradeService.getClassAverage(classId);
+    public List<GradeClassDto> getClassAverage(@PathParam("classId") Long classId) {
+        return gradeService.getOverallClassAverage(classId);
     }
 
-    @GET
-    @Path("/class/{classId}/subject/{subjectId}/average")
-    @RolesAllowed({"admin", "viewer"})
-    @CanAccessClass()
-    public Double getClassAverageForSubject(@PathParam("classId") Long classId, @PathParam("subjectId") Long subjectId) {
-        return gradeService.getClassAverageForSubject(classId, subjectId);
-    }
 }

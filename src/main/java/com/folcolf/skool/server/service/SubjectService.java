@@ -24,6 +24,11 @@ public class SubjectService {
     }
 
     @Transactional
+    public void persistBatch(List<Subject> subjects) {
+        Subject.persist(subjects);
+    }
+
+    @Transactional
     public void delete(Long id) {
         Subject.deleteById(id);
     }

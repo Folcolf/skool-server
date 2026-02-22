@@ -1,5 +1,7 @@
 package com.folcolf.skool.server.service;
 
+import com.folcolf.skool.server.dto.GradeClassDto;
+import com.folcolf.skool.server.dto.GradeStudentDto;
 import com.folcolf.skool.server.entity.Grade;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
@@ -26,6 +28,11 @@ public class GradeService {
     }
 
     @Transactional
+    public void persistBatch(List<Grade> grades) {
+        Grade.persist(grades);
+    }
+
+    @Transactional
     public void delete(Long id) {
         Grade.deleteById(id);
     }
@@ -42,19 +49,11 @@ public class GradeService {
                 ));
     }
 
-    public Double getClassAverage(Long classId) {
-        List<Grade> allGrades = Grade.findByClassId(classId);
-        if (allGrades.isEmpty()) {
-            return null;
-        }
-        return allGrades.stream().collect(Collectors.averagingDouble(Grade::getValue));
+    public List<GradeStudentDto> getClassAverageForStudent(Long studentId) {
+        return Grade.getAverageGradesBySubjectForStudent(studentId);
     }
 
-    public Double getClassAverageForSubject(Long classId, Long subjectId) {
-        List<Grade> subjectGrades = Grade.findByClassIdAndSubjectId(classId, subjectId);
-        if (subjectGrades.isEmpty()) {
-            return null;
-        }
-        return subjectGrades.stream().collect(Collectors.averagingDouble(Grade::getValue));
+    public List<GradeClassDto> getOverallClassAverage(Long classId) {
+        return Grade.getAverageGradesBySubjectForClass(classId);
     }
 }

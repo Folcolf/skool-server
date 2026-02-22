@@ -2,7 +2,6 @@ package com.folcolf.skool.server.security;
 
 import com.folcolf.skool.server.entity.SchoolClass;
 import com.folcolf.skool.server.entity.Student;
-import com.folcolf.skool.server.entity.Teacher;
 import com.folcolf.skool.server.service.SchoolClassService;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.test.junit.QuarkusTest;
@@ -107,77 +106,43 @@ class SecurityServiceTest {
     }
 
     @Test
-    void isTeacherOfClass_shouldReturnTrueIfTeacher() {
-        Teacher t = new Teacher();
-        t.id = 42L;
-        SchoolClass sc = new SchoolClass();
-        sc.id = 1L;
-        sc.setTeacher(t);
-        when(schoolClassService.findById(1L)).thenReturn(sc);
-        when(securityIdentity.getPrincipal()).thenReturn(() -> "42");
-        assertTrue(securityService.isTeacherOfClass(1L));
-    }
-
-    @Test
-    void isTeacherOfClass_shouldReturnFalseIfNotTeacher() {
-        Teacher t = new Teacher();
-        t.id = 99L;
-        SchoolClass sc = new SchoolClass();
-        sc.id = 1L;
-        sc.setTeacher(t);
-        when(schoolClassService.findById(1L)).thenReturn(sc);
-        when(securityIdentity.getPrincipal()).thenReturn(() -> "42");
-        assertFalse(securityService.isTeacherOfClass(1L));
-    }
-
-    @Test
-    void isTeacherOfClass_shouldReturnFalseIfClassNullOrNoTeacher() {
-        when(schoolClassService.findById(1L)).thenReturn(null);
-        assertFalse(securityService.isTeacherOfClass(1L));
-        SchoolClass sc = new SchoolClass();
-        sc.id = 1L;
-        sc.setTeacher(null);
-        when(schoolClassService.findById(1L)).thenReturn(sc);
-        assertFalse(securityService.isTeacherOfClass(1L));
-    }
-
-    @Test
     void canAccessClass_shouldReturnTrueIfAdmin() {
         when(securityIdentity.hasRole("admin")).thenReturn(true);
         assertTrue(securityService.canAccessClass(1L));
     }
 
     @Test
-    void canAccessClass_shouldReturnTrueIfStudentOrTeacher() {
+    void canAccessClass_shouldReturnTrueIfStudentInClass() {
         when(securityIdentity.hasRole("admin")).thenReturn(false);
-        // Student
         Student s = new Student();
         s.id = 42L;
         SchoolClass sc = new SchoolClass();
         sc.id = 1L;
         sc.setStudents(List.of(s));
-        sc.setTeacher(null);
         when(schoolClassService.findById(1L)).thenReturn(sc);
         when(securityIdentity.getPrincipal()).thenReturn(() -> "42");
-        assertTrue(securityService.canAccessClass(1L));
-        // Teacher
-        Teacher t = new Teacher();
-        t.id = 42L;
-        sc.setStudents(List.of());
-        sc.setTeacher(t);
-        when(schoolClassService.findById(1L)).thenReturn(sc);
         assertTrue(securityService.canAccessClass(1L));
     }
 
     @Test
-    void canAccessClass_shouldReturnFalseIfNotAdminStudentOrTeacher() {
+    void canAccessClass_shouldReturnFalseIfNotAdminAndNotInClass() {
         when(securityIdentity.hasRole("admin")).thenReturn(false);
+        Student s = new Student();
+        s.id = 99L;
         SchoolClass sc = new SchoolClass();
         sc.id = 1L;
-        sc.setStudents(List.of());
-        sc.setTeacher(null);
+        sc.setStudents(List.of(s));
         when(schoolClassService.findById(1L)).thenReturn(sc);
         when(securityIdentity.getPrincipal()).thenReturn(() -> "42");
         assertFalse(securityService.canAccessClass(1L));
     }
+
+    @Test
+    void canAccessClass_shouldReturnFalseIfClassNotFound() {
+        when(securityIdentity.hasRole("admin")).thenReturn(false);
+        when(schoolClassService.findById(1L)).thenReturn(null);
+        when(securityIdentity.getPrincipal()).thenReturn(() -> "42");
+        assertFalse(securityService.canAccessClass(1L));
+    }
+
 }

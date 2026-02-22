@@ -21,14 +21,14 @@ class SubjectControllerTest {
     }
 
     @Test
-    void getAll_shouldReturn403ForNonAdmin() {
+    void getAll_shouldReturn200ForNonAdmin() {
         given()
                 .auth().basic("user", "user")
                 .accept(ContentType.JSON)
                 .when()
                 .get("/subjects")
                 .then()
-                .statusCode(403);
+                .statusCode(200);
     }
 
     @Test
@@ -43,12 +43,36 @@ class SubjectControllerTest {
     }
 
     @Test
-    void getById_shouldReturn403ForNonAdmin() {
+    void getById_shouldReturn200Or204ForNonAdmin() {
         given()
                 .auth().basic("user", "user")
                 .accept(ContentType.JSON)
                 .when()
                 .get("/subjects/1")
+                .then()
+                .statusCode(anyOf(is(200), is(204)));
+    }
+
+    @Test
+    void createBatch_shouldReturn201ForAdmin() {
+        given()
+                .auth().basic("admin", "admin")
+                .contentType(ContentType.JSON)
+                .body("[]")
+                .when()
+                .post("/subjects/batch")
+                .then()
+                .statusCode(anyOf(is(200), is(201), is(204)));
+    }
+
+    @Test
+    void createBatch_shouldReturn403ForNonAdmin() {
+        given()
+                .auth().basic("user", "user")
+                .contentType(ContentType.JSON)
+                .body("[]")
+                .when()
+                .post("/subjects/batch")
                 .then()
                 .statusCode(403);
     }

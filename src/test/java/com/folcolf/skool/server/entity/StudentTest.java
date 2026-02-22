@@ -57,4 +57,55 @@ class StudentTest {
         s.setGrades(grades);
         assertEquals(grades, s.getGrades());
     }
+
+    @Test
+    void testConstructor() {
+        SchoolClass c = new SchoolClass();
+        List<Grade> grades = new ArrayList<>();
+        Student s = new Student("John", "Doe", c, grades);
+        assertEquals("John", s.getFirstName());
+        assertEquals("Doe", s.getLastName());
+        assertEquals(c, s.getSchoolClass());
+        assertEquals(grades, s.getGrades());
+    }
+
+    @Test
+    void testNoArgConstructor() {
+        Student s = new Student();
+        assertNull(s.getFirstName());
+        assertNull(s.getLastName());
+        assertNull(s.getSchoolClass());
+    }
+
+    @Test
+    void testEqualsWithSameInstance() {
+        Student s = new Student("John", "Doe", null, null);
+        s.id = 1L;
+        assertEquals(s, s);
+    }
+
+    @Test
+    void testEqualsWithNull() {
+        Student s = new Student("John", "Doe", null, null);
+        s.id = 1L;
+        assertNotEquals(null, s);
+    }
+
+    @Test
+    void testEqualsDifferentFirstName() {
+        Student s1 = new Student("John", "Doe", null, null);
+        s1.id = 1L;
+        Student s2 = new Student("Jane", "Doe", null, null);
+        s2.id = 1L;
+        assertNotEquals(s1, s2);
+    }
+
+    @Test
+    void testEqualsDifferentLastName() {
+        Student s1 = new Student("John", "Doe", null, null);
+        s1.id = 1L;
+        Student s2 = new Student("John", "Smith", null, null);
+        s2.id = 1L;
+        assertNotEquals(s1, s2);
+    }
 }

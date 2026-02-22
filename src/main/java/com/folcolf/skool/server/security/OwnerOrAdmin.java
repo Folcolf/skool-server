@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 @InterceptorBinding
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface PrincipalOrAdmin {
+public @interface OwnerOrAdmin {
     String param() default "id";
 }
 

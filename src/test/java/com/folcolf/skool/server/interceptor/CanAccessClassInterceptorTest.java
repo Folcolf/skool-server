@@ -45,7 +45,7 @@ class CanAccessClassInterceptorTest {
     @Test
     void shouldDenyIfParamNotParsable() throws Exception {
         Method m = DummyClass.class.getMethod("securedClassMethod", String.class);
-        CanAccessClassInterceptor interceptor = new CanAccessClassInterceptor(securityService);
+        AccessInterceptor.CanAccessClassInterceptor interceptor = new AccessInterceptor.CanAccessClassInterceptor(securityService);
 
         InvocationContext ctx = new InvocationContext() {
             @Override
@@ -103,7 +103,7 @@ class CanAccessClassInterceptorTest {
             @Override
             public void setParameters(Object[] params) { /* no-op for test */ }
         };
-        assertDoesNotThrow(() -> new CanAccessClassInterceptor(securityService).check(ctx));
+        assertDoesNotThrow(() -> new AccessInterceptor.CanAccessClassInterceptor(securityService).check(ctx));
     }
 
     static class DummyClass {

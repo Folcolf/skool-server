@@ -1,14 +1,14 @@
 package com.folcolf.skool.server.interceptor;
 
 import com.folcolf.skool.server.security.CanAccessClass;
-import com.folcolf.skool.server.security.PrincipalOrAdmin;
+import com.folcolf.skool.server.security.OwnerOrAdmin;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.PathParam;
 
 @ApplicationScoped
 public class TestResource {
 
-    @PrincipalOrAdmin()
+    @OwnerOrAdmin
     public void securedMethod(@PathParam("id") Long id) {
         // No-op, security is handled by interceptor
     }

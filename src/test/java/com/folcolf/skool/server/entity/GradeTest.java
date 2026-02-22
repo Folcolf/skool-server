@@ -72,4 +72,78 @@ class GradeTest {
         assertFalse(byStudent.isEmpty());
         assertEquals(20.0, byStudent.getFirst().getValue());
     }
+
+    @Test
+    void testConstructor() {
+        Student s = new Student();
+        Subject sub = new Subject();
+        Grade g = new Grade(15.0, s, sub);
+        assertEquals(15.0, g.getValue());
+        assertEquals(s, g.getStudent());
+        assertEquals(sub, g.getSubject());
+    }
+
+    @Test
+    void testNoArgConstructor() {
+        Grade g = new Grade();
+        assertNull(g.getValue());
+        assertNull(g.getStudent());
+        assertNull(g.getSubject());
+    }
+
+    @Test
+    @Transactional
+    void testGetAverageGradesBySubjectForStudent() {
+        Student s = new Student();
+        s.setFirstName("Test");
+        s.setLastName("Student");
+        s.persist();
+        Subject sub1 = new Subject();
+        sub1.setName("Math");
+        sub1.setCoefficient(2.0);
+        sub1.persist();
+        Subject sub2 = new Subject();
+        sub2.setName("Français");
+        sub2.setCoefficient(1.0);
+        sub2.persist();
+
+        Grade g1 = new Grade(10.0, s, sub1);
+        g1.persist();
+        Grade g2 = new Grade(20.0, s, sub1);
+        g2.persist();
+        Grade g3 = new Grade(15.0, s, sub2);
+        g3.persist();
+
+        var result = Grade.getAverageGradesBySubjectForStudent(s.id);
+        assertNotNull(result);
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    @Transactional
+    void testGetAverageGradesBySubjectForClass() {
+        SchoolClass sc = new SchoolClass();
+        sc.setName("ClassA");
+        sc.persist();
+
+        Student s = new Student();
+        s.setFirstName("Test");
+        s.setLastName("Student");
+        s.setSchoolClass(sc);
+        s.persist();
+
+        Subject sub = new Subject();
+        sub.setName("Math");
+        sub.setCoefficient(2.0);
+        sub.persist();
+
+        Grade g1 = new Grade(10.0, s, sub);
+        g1.persist();
+        Grade g2 = new Grade(20.0, s, sub);
+        g2.persist();
+
+        var result = Grade.getAverageGradesBySubjectForClass(sc.id);
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+    }
 }

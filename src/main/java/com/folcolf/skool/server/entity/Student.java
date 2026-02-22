@@ -25,6 +25,14 @@ public class Student extends PanacheEntity {
     @ToString.Exclude
     private List<Grade> grades;
 
+    public static List<Student> findByClassId(Long classId) {
+        return list("schoolClass.id", classId);
+    }
+
+    public static void addStudentsToClass(Long classId, List<Long> students) {
+        update("schoolClass.id = ?1 where id in ?2", classId, students);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Student student)) {

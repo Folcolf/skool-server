@@ -96,4 +96,26 @@ class StudentControllerTest {
                 .then()
                 .statusCode(403);
     }
+
+    @Test
+    void getAverageGrades_shouldReturn200ForAdmin() {
+        given()
+                .auth().basic("admin", "admin")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/students/1/grades/average")
+                .then()
+                .statusCode(anyOf(is(200), is(204)));
+    }
+
+    @Test
+    void getAverageGrades_shouldReturn403ForNonAdmin() {
+        given()
+                .auth().basic("user", "user")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/students/1/grades/average")
+                .then()
+                .statusCode(403);
+    }
 }

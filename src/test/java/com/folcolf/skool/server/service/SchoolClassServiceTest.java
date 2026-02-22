@@ -16,11 +16,13 @@ import java.util.List;
 @QuarkusTest
 class SchoolClassServiceTest {
     private SchoolClassService schoolClassService;
+    private StudentService studentService;
 
     @BeforeEach
     void setUp() {
         mock(SchoolClass.class);
-        schoolClassService = new SchoolClassService();
+        studentService = new StudentService();
+        schoolClassService = new SchoolClassService(studentService);
     }
 
     @Test

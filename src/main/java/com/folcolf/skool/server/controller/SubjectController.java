@@ -17,14 +17,12 @@ public class SubjectController {
     private final SubjectService subjectService;
 
     @GET
-    @RolesAllowed("admin")
     public List<Subject> getAll() {
         return subjectService.listAll();
     }
 
     @GET
     @Path("/{id}")
-    @RolesAllowed("admin")
     public Subject getById(@PathParam("id") Long id) {
         return subjectService.findById(id);
     }
@@ -33,6 +31,13 @@ public class SubjectController {
     @RolesAllowed("admin")
     public void create(Subject subject) {
         subjectService.persist(subject);
+    }
+
+    @POST
+    @Path("/batch")
+    @RolesAllowed("admin")
+    public void createBatch(List<Subject> subjects) {
+        subjectService.persistBatch(subjects);
     }
 
     @DELETE

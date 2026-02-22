@@ -1,6 +1,6 @@
 package com.folcolf.skool.server.interceptor;
 
-import com.folcolf.skool.server.security.PrincipalOrAdmin;
+import com.folcolf.skool.server.security.OwnerOrAdmin;
 import com.folcolf.skool.server.security.SecurityService;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
@@ -17,7 +17,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
 @QuarkusTest
-class PrincipalOrAdminInterceptorTest {
+class OwnerOrAdminInterceptorTest {
     @Inject
     TestResource resource;
     @InjectMock
@@ -87,14 +87,14 @@ class PrincipalOrAdminInterceptorTest {
 
 
         };
-        PrincipalOrAdminInterceptor interceptor = new PrincipalOrAdminInterceptor(securityService);
+        AccessInterceptor.PrincipalOrAdminInterceptor interceptor = new AccessInterceptor.PrincipalOrAdminInterceptor(securityService);
         assertThrows(ForbiddenException.class, () -> interceptor.check(ctx));
     }
 
     @Test
     void shouldAllowIfNoAnnotation() throws Exception {
         Method m = Object.class.getMethod("toString");
-        assertDoesNotThrow(() -> new PrincipalOrAdminInterceptor(securityService).check(new InvocationContext() {
+        assertDoesNotThrow(() -> new AccessInterceptor.PrincipalOrAdminInterceptor(securityService).check(new InvocationContext() {
             @Override
             public Object getTarget() {return resource;}
 
@@ -124,7 +124,7 @@ class PrincipalOrAdminInterceptorTest {
     }
 
     static class DummyClass {
-        @PrincipalOrAdmin()
+        @OwnerOrAdmin
         public void securedMethod(@PathParam("id") String id) { /* test only */ }
     }
 }

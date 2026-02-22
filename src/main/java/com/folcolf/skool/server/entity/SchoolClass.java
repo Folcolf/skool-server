@@ -2,7 +2,6 @@ package com.folcolf.skool.server.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.*;
 
@@ -17,8 +16,6 @@ import java.util.Objects;
 @AllArgsConstructor
 public class SchoolClass extends PanacheEntity {
     private String name;
-    @ManyToOne
-    private Teacher teacher;
     @OneToMany(mappedBy = "schoolClass")
     @ToString.Exclude
     private List<Student> students;

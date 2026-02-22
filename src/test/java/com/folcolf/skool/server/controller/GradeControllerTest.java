@@ -96,4 +96,94 @@ class GradeControllerTest {
                 .then()
                 .statusCode(403);
     }
+
+    @Test
+    void createBatch_shouldReturn201ForAdmin() {
+        given()
+                .auth().basic("admin", "admin")
+                .contentType(ContentType.JSON)
+                .body("[]")
+                .when()
+                .post("/grades/batch")
+                .then()
+                .statusCode(anyOf(is(200), is(201), is(204)));
+    }
+
+    @Test
+    void createBatch_shouldReturn403ForNonAdmin() {
+        given()
+                .auth().basic("user", "user")
+                .contentType(ContentType.JSON)
+                .body("[]")
+                .when()
+                .post("/grades/batch")
+                .then()
+                .statusCode(403);
+    }
+
+    @Test
+    void getGrades_shouldReturn200ForAdmin() {
+        given()
+                .auth().basic("admin", "admin")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/grades/student/1")
+                .then()
+                .statusCode(anyOf(is(200), is(204)));
+    }
+
+    @Test
+    void getGrades_shouldReturn403ForNonAdmin() {
+        given()
+                .auth().basic("user", "user")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/grades/student/1")
+                .then()
+                .statusCode(403);
+    }
+
+    @Test
+    void getAverages_shouldReturn200ForAdmin() {
+        given()
+                .auth().basic("admin", "admin")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/grades/student/1/averages")
+                .then()
+                .statusCode(anyOf(is(200), is(204)));
+    }
+
+    @Test
+    void getAverages_shouldReturn403ForNonAdmin() {
+        given()
+                .auth().basic("user", "user")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/grades/student/1/averages")
+                .then()
+                .statusCode(403);
+    }
+
+    @Test
+    void getClassAverage_shouldReturn200ForAdmin() {
+        given()
+                .auth().basic("admin", "admin")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/grades/class/1/average")
+                .then()
+                .statusCode(anyOf(is(200), is(204)));
+    }
+
+    @Test
+    void getClassAverage_shouldReturn403ForNonAdmin() {
+        given()
+                .auth().basic("user", "user")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/grades/class/1/average")
+                .then()
+                .statusCode(403);
+    }
 }

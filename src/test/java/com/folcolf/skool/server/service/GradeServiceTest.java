@@ -8,7 +8,6 @@ import static io.quarkus.panache.mock.PanacheMock.mock;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.transaction.Transactional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.*;
@@ -73,56 +72,6 @@ class GradeServiceTest {
         when(Grade.findByStudentId(1L)).thenReturn(List.of());
         Map<String, Double> avg = gradeService.getAverageBySubject(1L);
         assertEquals(0, avg.size());
-    }
-
-    @Test
-    void getClassAverage_shouldReturnNullIfNoGrades() {
-        when(Grade.findByClassId(1L)).thenReturn(List.of());
-        Double avg = gradeService.getClassAverage(1L);
-        assertNull(avg);
-    }
-
-    @Test
-    void getClassAverageForSubject_shouldReturnNullIfNoGrades() {
-        when(Grade.findByClassIdAndSubjectId(1L, 1L)).thenReturn(List.of());
-        Double avg = gradeService.getClassAverageForSubject(1L, 1L);
-        assertNull(avg);
-    }
-
-    @Test
-    void getClassAverage_shouldReturnAverageIfGradesPresent() {
-        Student s = new Student();
-        s.id = 1L;
-        Grade g1 = new Grade();
-        g1.setStudent(s);
-        g1.setValue(10.0);
-        Grade g2 = new Grade();
-        g2.setStudent(s);
-        g2.setValue(20.0);
-        List<Grade> grades = List.of(g1, g2);
-        when(Grade.findByClassId(1L)).thenReturn(grades);
-        Double avg = gradeService.getClassAverage(1L);
-        assertEquals(15.0, avg);
-    }
-
-    @Test
-    void getClassAverageForSubject_shouldReturnAverageIfGradesPresent() {
-        Student s = new Student();
-        s.id = 1L;
-        Subject subj = new Subject();
-        subj.id = 1L;
-        Grade g1 = new Grade();
-        g1.setStudent(s);
-        g1.setSubject(subj);
-        g1.setValue(10.0);
-        Grade g2 = new Grade();
-        g2.setStudent(s);
-        g2.setSubject(subj);
-        g2.setValue(20.0);
-        List<Grade> grades = List.of(g1, g2);
-        when(Grade.findByClassIdAndSubjectId(1L, 1L)).thenReturn(grades);
-        Double avg = gradeService.getClassAverageForSubject(1L, 1L);
-        assertEquals(15.0, avg);
     }
 
     @Test
